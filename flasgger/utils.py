@@ -451,7 +451,7 @@ def load_from_file(swag_path, swag_type='yml', root_path=None):
         # TODO: support JSON
 
     try:
-        with open(swag_path) as yaml_file:
+        with open(swag_path, encoding="utf-8") as yaml_file:
             return yaml_file.read()
     except IOError:
         # not in the same dir, add dirname
@@ -459,7 +459,7 @@ def load_from_file(swag_path, swag_type='yml', root_path=None):
             root_path or os.path.dirname(__file__), swag_path
         )
         try:
-            with open(swag_path) as yaml_file:
+            with open(swag_path, encoding="utf-8") as yaml_file:
                 return yaml_file.read()
         except IOError:  # pragma: no cover
             # if package dir
@@ -473,7 +473,7 @@ def load_from_file(swag_path, swag_type='yml', root_path=None):
             ).split(os.sep)[1:]
             site_package = imp.find_module(path[0])[1]
             swag_path = os.path.join(site_package, os.sep.join(path[1:]))
-            with open(swag_path) as yaml_file:
+            with open(swag_path, encoding="utf-8") as yaml_file:
                 return yaml_file.read()
 
 
