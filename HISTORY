@@ -3,6 +3,46 @@ Changelog
 
 These are all the changes in Flasgger since the 0.6.0 release
 
+0.9.2
+-----
+
+- Fixed packaging issue caused by the inclusion of examples [#242](https://github.com/rochacbruno/flasgger/issues/242)
+- Enhancement allowing swagger-ui and static js to be loaded from external URLs [#245](https://github.com/rochacbruno/flasgger/pull/245)
+- Added ui_params_text to allow raw text to be added to ui_params [#244](https://github.com/rochacbruno/flasgger/pull/244)
+- Auto-disable Flasgger caching when running Flask in debug mode [#250](https://github.com/rochacbruno/flasgger/pull/250)
+
+0.9.1
+-----
+
+- Updated support for apispec >=0.39.0 [#205](https://github.com/rochacbruno/flasgger/pull/205)
+- Added install of etc/flasgger_package in requirements-dev.txt [#208](https://github.com/rochacbruno/flasgger/pull/208)
+- repaired key error thrown when a path is given instead of in the func [#210](https://github.com/rochacbruno/flasgger/pull/210)
+- fixed static file paths in demo app [#213](https://github.com/rochacbruno/flasgger/pull/213)
+- removed pre-compile/cache *.pyc files from dist [#137](https://github.com/rochacbruno/flasgger/issues/137)
+- auto-detect unicode charset-encoding in YAML files [#156](https://github.com/rochacbruno/flasgger/issues/156)
+- bug fix, use getattr instead of dict get [#226](https://github.com/rochacbruno/flasgger/pull/226)
+- added dev support for Docker (for demo app)
+- added support for parsed MethodView (flask_restful) [#222](https://github.com/rochacbruno/flasgger/pull/222)
+
+0.9.0
+-----
+
+- Updated Swagger UI 3.x
+- uiversion now defaults to 3
+- 'hide_top_bar' config option to remove the green top bar
+- 'fotter_text' added to customize the footer text (allows html and <script>)
+- templates/flasgger/footer.html added and can be replaced to customization
+  this footer.html is the right place for custom <script>
+- 'top_text' added to customize the header text (allows html)
+- templates/flasgger/top.html added and can be replaced to customization
+- 'head_text' added to customize the <head> (allows html)
+- templates/flasgger/head.html added and can be replaced to customization
+- added 'doc_expansion' config to control the collapse
+- added 'ui_params' to allow override of any swagger.ui values
+- See examples/changelog_090.py
+- schemes are now pulled from config when present [#201](https://github.com/rochacbruno/flasgger/pull/201)
+- UI template refactoring/separation
+
 0.8.3
 -----
 

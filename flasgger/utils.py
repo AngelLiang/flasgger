@@ -1,5 +1,6 @@
 # coding: utf-8
 
+import codecs
 import copy
 import imp
 import inspect
@@ -63,7 +64,7 @@ def get_schema_specs(schema_id, swagger):
                 return swag
 
 
-def get_specs(rules, ignore_verbs, optional_fields, sanitizer):
+def get_specs(rules, ignore_verbs, optional_fields, sanitizer, doc_dir=None):
 
     specs = []
     for rule in rules:
@@ -88,11 +89,11 @@ def get_specs(rules, ignore_verbs, optional_fields, sanitizer):
 
             klass = method.__dict__.get('view_class', None)
             if not is_mv and klass and hasattr(klass, 'verb'):
-                method = klass.__dict__.get('verb')
+                method = getattr(klass, 'verb', None)
             elif klass and hasattr(klass, 'dispatch_request'):
-                method = klass.__dict__.get('dispatch_request')
+                method = getattr(klass, 'dispatch_request', None)
             if method is None:  # for MethodView
-                method = klass.__dict__.get(verb)
+                method = getattr(klass, verb, None)
 
             if method is None:
                 if is_mv:  # #76 Empty MethodViews
@@ -127,6 +128,19 @@ def get_specs(rules, ignore_verbs, optional_fields, sanitizer):
                 swag['definitions'] = apispec_definitions
 
                 swagged = True
+
+            if doc_dir:
+                if view_class:
+                    file_path = os.path.join(
+                        doc_dir, endpoint.__name__, method.__name__ + '.yml')
+                else:
+                    file_path = os.path.join(
+                        doc_dir, endpoint.__name__ + '.yml')
+                if os.path.isfile(file_path):
+                    func = method.__func__ \
+                        if hasattr(method, '__func__') else method
+                    setattr(func, 'swag_type', 'yml')
+                    setattr(func, 'swag_path', file_path)
 
             doc_summary, doc_description, doc_swag = parse_docstring(
                 method, sanitizer, endpoint=rule.endpoint, verb=verb)
@@ -300,7 +314,7 @@ def validate(
             final_filepath = filepath
         full_doc = load_from_file(final_filepath)
         yaml_start = full_doc.find('---')
-        swag = yaml.load(full_doc[yaml_start if yaml_start >= 0 else 0:])
+        swag = yaml.safe_load(full_doc[yaml_start if yaml_start >= 0 else 0:])
     else:
         swag = copy.deepcopy(specs)
 
@@ -364,7 +378,6 @@ def apispec_to_template(app, spec, definitions=None, paths=None):
     """
     definitions = definitions or []
     paths = paths or []
-    spec_dict = spec.to_dict()
 
     with app.app_context():
         for definition in definitions:
@@ -374,11 +387,12 @@ def apispec_to_template(app, spec, definitions=None, paths=None):
                 schema = definition
                 name = schema.__name__.replace('Schema', '')
 
-            spec.definition(name, schema=schema)
+            spec.components.schema(name, schema=schema)
 
         for path in paths:
-            spec.add_path(view=path)
+            spec.path(view=path)
 
+    spec_dict = spec.to_dict()
     ret = ordered_dict_to_dict(spec_dict)
     return ret
 
@@ -451,7 +465,8 @@ def load_from_file(swag_path, swag_type='yml', root_path=None):
         # TODO: support JSON
 
     try:
-        with open(swag_path, encoding="utf-8") as yaml_file:
+        enc = detect_by_bom(swag_path)
+        with codecs.open(swag_path, encoding=enc) as yaml_file:
             return yaml_file.read()
     except IOError:
         # not in the same dir, add dirname
@@ -459,7 +474,8 @@ def load_from_file(swag_path, swag_type='yml', root_path=None):
             root_path or os.path.dirname(__file__), swag_path
         )
         try:
-            with open(swag_path, encoding="utf-8") as yaml_file:
+            enc = detect_by_bom(swag_path)
+            with codecs.open(swag_path, encoding=enc) as yaml_file:
                 return yaml_file.read()
         except IOError:  # pragma: no cover
             # if package dir
@@ -475,6 +491,18 @@ def load_from_file(swag_path, swag_type='yml', root_path=None):
             swag_path = os.path.join(site_package, os.sep.join(path[1:]))
             with open(swag_path, encoding="utf-8") as yaml_file:
                 return yaml_file.read()
+
+
+def detect_by_bom(path, default='utf-8'):
+    with open(path, 'rb') as f:
+        raw = f.read(4)  # will read less if the file is smaller
+    for enc, boms in \
+            ('utf-8-sig', (codecs.BOM_UTF8,)),\
+            ('utf-16', (codecs.BOM_UTF16_LE, codecs.BOM_UTF16_BE)),\
+            ('utf-32', (codecs.BOM_UTF32_LE, codecs.BOM_UTF32_BE)):
+        if any(raw.startswith(bom) for bom in boms):
+            return enc
+    return default
 
 
 def parse_docstring(obj, process_doc, endpoint=None, verb=None):
@@ -525,10 +553,10 @@ def parse_docstring(obj, process_doc, endpoint=None, verb=None):
                 other_lines = process_doc(
                     full_doc[line_feed + 1: yaml_sep]
                 )
-                swag = yaml.load(full_doc[yaml_sep + 4:])
+                swag = yaml.safe_load(full_doc[yaml_sep + 4:])
         else:
             if from_file:
-                swag = yaml.load(full_doc)
+                swag = yaml.safe_load(full_doc)
             else:
                 first_line = full_doc
 
@@ -578,7 +606,7 @@ def parse_definition_docstring(obj, process_doc):
             doc_lines = process_doc(
                 full_doc[:yaml_sep - 1]
             )
-            swag = yaml.load(full_doc[yaml_sep:])
+            swag = yaml.safe_load(full_doc[yaml_sep:])
         else:
             doc_lines = process_doc(full_doc)
 

@@ -10,7 +10,7 @@
 
 ![flasgger](docs/flasgger.png)
 
-Flasgger is a Flask extension to **extract [OpenAPI=Specification](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/2.0.md#operation-object)** from all Flask views registered in your API.
+Flasgger is a Flask extension to **extract [OpenAPI-Specification](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/2.0.md#operation-object)** from all Flask views registered in your API.
 
 Flasgger also comes with **[SwaggerUI](http://swagger.io/swagger-ui/) embedded** so you can access [http://localhost:5000/apidocs](localhost:5000/apidocs) and visualize and interact with your API resources.
 
@@ -22,11 +22,25 @@ Flasgger is compatible with `Flask-RESTful` so you can use `Resources` and `swag
 
 Flasgger also supports `Marshmallow APISpec` as base template for specification, if you are using APISPec from Marshmallow take a look at [apispec example.](examples/apispec_example.py)
 
+# Top Contributors
+
+[![](https://sourcerer.io/fame/rochacbruno/rochacbruno/flasgger/images/0)](https://sourcerer.io/fame/rochacbruno/rochacbruno/flasgger/links/0)[![](https://sourcerer.io/fame/rochacbruno/rochacbruno/flasgger/images/1)](https://sourcerer.io/fame/rochacbruno/rochacbruno/flasgger/links/1)[![](https://sourcerer.io/fame/rochacbruno/rochacbruno/flasgger/images/2)](https://sourcerer.io/fame/rochacbruno/rochacbruno/flasgger/links/2)[![](https://sourcerer.io/fame/rochacbruno/rochacbruno/flasgger/images/3)](https://sourcerer.io/fame/rochacbruno/rochacbruno/flasgger/links/3)[![](https://sourcerer.io/fame/rochacbruno/rochacbruno/flasgger/images/4)](https://sourcerer.io/fame/rochacbruno/rochacbruno/flasgger/links/4)[![](https://sourcerer.io/fame/rochacbruno/rochacbruno/flasgger/images/5)](https://sourcerer.io/fame/rochacbruno/rochacbruno/flasgger/links/5)[![](https://sourcerer.io/fame/rochacbruno/rochacbruno/flasgger/images/6)](https://sourcerer.io/fame/rochacbruno/rochacbruno/flasgger/links/6)[![](https://sourcerer.io/fame/rochacbruno/rochacbruno/flasgger/images/7)](https://sourcerer.io/fame/rochacbruno/rochacbruno/flasgger/links/7)
+
 # Examples and demo app
 
 There are some [example applications](examples/) and you can also play with examples in [Flasgger demo app](http://flasgger.pythonanywhere.com/)
 
 > NOTE: all the examples apps are also test cases and run automatically in Travis CI to ensure quality and coverage.
+
+## Docker
+
+The examples and demo app can also be built and run as a Docker image/container:
+
+```
+docker build -t flasgger .
+docker run -it --rm -p 5000:5000 --name flasgger flasgger
+```
+Then access the Flasgger demo app at http://localhost:5000 .
 
 # Installation
 
@@ -357,6 +371,12 @@ app.run(debug=True)
 
 ```
 
+## Auto-parsing external YAML docs and `MethodView`s
+
+Flasgger can be configured to auto-parse external YAM API docs.  [Set a `doc_dir`](https://github.com/rochacbruno/flasgger/blob/aaef05c17cc559d01b7436211093463642eb6ae2/examples/parsed_view_func.py#L16) in your `app.config['SWAGGER']` and Swagger will load API docs by looking in `doc_dir` for YAML files stored by endpoint-name and method-name.  For example, `'doc_dir': './examples/docs/'` and a file `./examples/docs/items/get.yml` will provide a Swagger doc for `ItemsView` method `get`.
+
+Additionally, when using **Flask RESTful** per above, by passing `parse=True` when constructing `Swagger`, Flasgger will use  `flask_restful.reqparse.RequestParser`, locate all `MethodView`s and parsed and validated data will be stored in `flask.request.parsed_data`.
+
 ## Handling multiple http methods and routes for a single function
 
 You can separate specifications by endpoint or methods
@@ -625,6 +645,27 @@ swagger = Swagger(app)
 
 ```
 
+# OpenAPI 3.0 Support
+
+There is experimental support for OpenAPI 3.0 that should work when using SwaggerUI 3. To use OpenAPI 3.0, set `app.config['SWAGGER']['openapi']` to a version that the current SwaggerUI 3 supports such as `'3.0.2'`.
+
+For an example of this that uses `callbacks` and `requestBody`, see the [callbacks example](examples/callbacks.py).
+
+## Externally loading Swagger UI and jQuery JS/CSS
+
+Starting with Flasgger 0.9.2 you can specify external URL locations for loading the JavaScript and CSS for the Swagger and jQuery libraries loaded in the Flasgger default templates.  If the configuration properties below are omitted, Flasgger will serve static versions it includes - these versions may be older than the current Swagger UI v2 or v3 releases.
+
+The following example loads Swagger UI and jQuery versions from unpkg.com:
+
+```
+swagger_config = Swagger.DEFAULT_CONFIG
+swagger_config['swagger_ui_bundle_js'] = '//unpkg.com/swagger-ui-dist@3/swagger-ui-bundle.js'
+swagger_config['swagger_ui_standalone_preset_js'] = '//unpkg.com/swagger-ui-dist@3/swagger-ui-standalone-preset.js'
+swagger_config['jquery_js'] = '//unpkg.com/jquery@2.2.4/dist/jquery.min.js'
+swagger_config['swagger_ui_css'] = '//unpkg.com/swagger-ui-dist@3/swagger-ui.css'
+Swagger(app, config=swagger_config)
+```
+
 # Initializing Flasgger with default data.
 
 You can start your Swagger spec with any default data providing a template:
@@ -699,7 +740,7 @@ the swagger docs will load correctly, but the "Try it Out" button points to the 
 
 ```python
 from flask import Flask, request
-from flask import Swagger, LazyString, LazyJSONEncoder
+from flasgger import Swagger, LazyString, LazyJSONEncoder
 
 app = Flask(__name__)
 app.json_encoder = LazyJSONEncoder

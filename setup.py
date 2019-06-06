@@ -2,10 +2,7 @@
 import re
 import os
 
-try:
-    from setuptools import setup, find_packages
-except ImportError:
-    from distutils.core import setup, find_packages
+from setuptools import setup, find_packages
 
 
 def fpath(name):
@@ -41,7 +38,14 @@ setup(
     description='Extract swagger specs from your flask project',
     long_description=desc(),
     long_description_content_type="text/markdown",
-    packages=find_packages(),
+    packages=find_packages(
+        exclude=[
+            'tests', 'tests.*',
+            'examples', 'examples.*',
+            'demo_app', 'demo_app.*',
+            'etc', 'etc.*'
+        ]
+    ),
     include_package_data=True,
     zip_safe=False,
     platforms='any',
@@ -49,6 +53,7 @@ setup(
         'Flask>=0.10',
         'PyYAML>=3.0',
         'jsonschema>=2.5.1',
+        'jsonschema<3.0.0',
         'mistune',
         'six>=1.10.0'
     ]
