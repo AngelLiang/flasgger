@@ -1,5 +1,5 @@
 """
-The simple example using declared definitions.
+Using UIVERSION = Swagger UI 2.
 """
 
 from flask import Flask, jsonify
@@ -8,7 +8,8 @@ from flasgger import Swagger
 
 app = Flask(__name__)
 app.config['SWAGGER'] = {
-    'title': 'Colors API'
+    'title': 'Colors API Using Swagger UI 2 (old)',
+    'uiversion': 2
 }
 Swagger(app)
 
